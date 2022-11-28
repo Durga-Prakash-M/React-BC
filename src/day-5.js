@@ -1,8 +1,7 @@
-/* without lifting state up */
+import React, { useEffect, useState, useContext, createContext } from "react";
 
-import React, { useEffect, useState } from "react";
-
-const SignUp = () => {
+const UseUserNameInclusion = createContext();
+function App() {
   const initialValues = {
     username: "",
     email: "",
@@ -13,7 +12,7 @@ const SignUp = () => {
   const [formValues, setFormValues] = useState(() => initialValues);
   const [formErrors, setFormErrors] = useState({});
   const [submit, setSubmit] = useState(false);
-
+  const [includeUsername, setIncludeUsername] = useState(true);
   useEffect(() => {
     if (Object.keys(formErrors).length === 0 && submit) {
       alert("signed up successfully");
@@ -25,16 +24,19 @@ const SignUp = () => {
     setFormValues({ ...formValues, [name]: value });
   };
 
+  const handleCheckbox = (event) => {
+    setIncludeUsername((prev) => !prev);
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
     setFormErrors(validate(formValues));
     setSubmit(true);
   };
-
   const validate = (values) => {
     const errors = {};
     const re = /.*@.*\..*/;
-    if (!values.username) {
+    if (includeUsername && !values.username) {
       errors.username = "Username is Required!";
     }
     if (!values.email) {
@@ -55,27 +57,52 @@ const SignUp = () => {
   };
 
   return (
+    <UseUserNameInclusion.Provider value={includeUsername}>
+      <input
+        type="checkbox"
+        name="includeUsername"
+        onClick={handleCheckbox}
+        defaultChecked
+      />
+      <label>include username</label>
+      <SignUp
+        formValues={formValues}
+        formErrors={formErrors}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
+    </UseUserNameInclusion.Provider>
+  );
+}
+
+function SignUp(props) {
+  const shouldIncludeUsername = useContext(UseUserNameInclusion);
+  const usernameField = shouldIncludeUsername ? (
+    <tr>
+      <td>
+        <label>Name:</label>
+      </td>
+      <td>
+        <input
+          type="text"
+          name="username"
+          value={props.formValues.name}
+          onChange={(event) => props.handleChange(event)}
+          placeholder="Enter username"
+        />
+      </td>
+      <td>{props.formErrors.username}</td>
+    </tr>
+  ) : (
+    <tr></tr>
+  );
+  return (
     <>
-      {/* <p>{JSON.stringify(formValues)}</p> */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(event) => props.handleSubmit(event)}>
         <table>
           <caption>Registration Form</caption>
           <tbody>
-            <tr>
-              <td>
-                <label>Name:</label>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  name="username"
-                  value={formValues.name}
-                  onChange={handleChange}
-                  placeholder="Enter username"
-                />
-              </td>
-              <td>{formErrors.username}</td>
-            </tr>
+            {usernameField}
             <tr>
               <td>
                 <label>Email:</label>
@@ -84,12 +111,12 @@ const SignUp = () => {
                 <input
                   type="email"
                   name="email"
-                  value={formValues.email}
-                  onChange={handleChange}
+                  value={props.formValues.email}
+                  onChange={(event) => props.handleChange(event)}
                   placeholder="Enter email"
                 />
               </td>
-              <td>{formErrors.email}</td>
+              <td>{props.formErrors.email}</td>
             </tr>
             <tr>
               <td>
@@ -99,12 +126,12 @@ const SignUp = () => {
                 <input
                   type="password"
                   name="password"
-                  value={formValues.password}
-                  onChange={handleChange}
+                  value={props.formValues.password}
+                  onChange={(event) => props.handleChange(event)}
                   placeholder="Enter password"
                 />
               </td>
-              <td>{formErrors.password}</td>
+              <td>{props.formErrors.password}</td>
             </tr>
             <tr>
               <td>
@@ -114,12 +141,12 @@ const SignUp = () => {
                 <input
                   type="password"
                   name="confirmPassword"
-                  value={formValues.confirmPassword}
-                  onChange={handleChange}
+                  value={props.formValues.confirmPassword}
+                  onChange={(event) => props.handleChange(event)}
                   placeholder="re type password"
                 />
               </td>
-              <td>{formErrors.confirmPassword}</td>
+              <td>{props.formErrors.confirmPassword}</td>
             </tr>
             <tr>
               <td colSpan="2">
@@ -131,6 +158,6 @@ const SignUp = () => {
       </form>
     </>
   );
-};
-export default SignUp;
+}
+export default App;
 // export default function App() {}
